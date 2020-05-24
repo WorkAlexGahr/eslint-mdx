@@ -24,19 +24,21 @@ export const remark: Rule.RuleModule = {
     const filename = context.getFilename()
     const extname = path.extname(filename)
     const sourceCode = context.getSourceCode()
-    const extensions = DEFAULT_EXTENSIONS.concat(
-      context.parserOptions.extensions || [],
-      MARKDOWN_EXTENSIONS,
-      context.parserOptions.markdownExtensions || [],
+    const options = context.parserOptions
+    const isMdx = DEFAULT_EXTENSIONS.concat(options.extensions || []).includes(
+      extname,
     )
+    const isMarkdown = MARKDOWN_EXTENSIONS.concat(
+      options.markdownExtensions || [],
+    ).includes(extname)
     return {
       Program(node) {
         /* istanbul ignore if */
-        if (!extensions.includes(extname)) {
+        if (!isMdx && !isMarkdown) {
           return
         }
         const sourceText = sourceCode.getText(node)
-        const remarkProcessor = getRemarkProcessor(filename)
+        const remarkProcessor = getRemarkProcessor(filename, isMdx)
         const file = vfile({
           path: filename,
           contents: sourceText,
